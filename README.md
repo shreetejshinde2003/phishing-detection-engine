@@ -10,10 +10,11 @@ An enterprise-grade, AI-powered phishing detection and forensic analysis tool bu
 *   **Interactive SOC Training:** Generates synthetic spear-phishing scenarios for security analyst training.
 
 ## Tech Stack
-*   **Frontend:** React, Vite, Tailwind CSS (Custom Dark/Glassmorphism UI)
-*   **Backend:** Node.js, Express
-*   **AI/LLM:** Google Gemini API
-*   **Security:** In-memory Rate Limiting, Regex Sanitization, Gitleaks pre-commit scanning.
+* **Language:** TypeScript (End-to-End Type Safety)
+* **Frontend:** React, Vite, Tailwind CSS (Custom Dark/Glassmorphism UI)
+* **Backend:** Node.js, Express (TypeScript Execution via `tsx`)
+* **AI/LLM:** Google Gemini API
+* **Security & Infrastructure:** In-memory Rate Limiting, Regex Sanitization, Gitleaks, Vercel
 
 ## Local Development
 1. Clone the repository: `git clone https://github.com/shreetejshinde2003/phishing-detection-engine.git`
