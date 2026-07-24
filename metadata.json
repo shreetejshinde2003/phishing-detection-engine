@@ -1,0 +1,6 @@
+{
+  "name": "Phishing Detection Engine",
+  "description": "An AI-powered cybersecurity dashboard for analyzing emails for phishing indicators and generating synthetic spear-phishing scenarios for SOC training.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
