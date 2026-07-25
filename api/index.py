@@ -15,7 +15,7 @@ if not api_key:
     raise ValueError("GEMINI_API_KEY environment variable is required")
 client = genai.Client(api_key=api_key)
 
-DEFAULT_MODEL = os.environ.get("GEMINI_MODEL_VERSION", "gemini-2.5-flash")
+DEFAULT_MODEL = os.environ.get("GEMINI_MODEL_VERSION", "gemini-3.1-flash-lite")
 
 # 2. Define Frontend Request Models
 class AnalyzeRequest(BaseModel):
