@@ -1,6 +1,7 @@
 import os
 import re
 import json
+from typing import Optional, List
 from fastapi import FastAPI, Request, HTTPException
 from pydantic import BaseModel, Field
 from google import genai
@@ -21,7 +22,7 @@ class AnalyzeRequest(BaseModel):
     text: str
 
 class TrainingRequest(BaseModel):
-    seed: str | None = None
+    seed: Optional[str] = None  # FIXED: using Optional instead of |
     difficulty: str = "Level 1: Mass Phishing"
 
 # 3. Define Gemini Structured Output Models (Pydantic)
@@ -32,7 +33,7 @@ class Indicator(BaseModel):
 class AnalysisResult(BaseModel):
     riskScore: int = Field(description="Risk score from 0 to 100")
     explanation: str = Field(description="Detailed explanation of findings")
-    indicators: list[Indicator] = Field(description="List of specific phishing indicators found")
+    indicators: List[Indicator] = Field(description="List of specific phishing indicators found") # FIXED: Capital 'List'
 
 class MaliciousElement(BaseModel):
     element: str = Field(description="The exact substring that is suspicious")
@@ -42,8 +43,7 @@ class TrainingScenario(BaseModel):
     sender: str = Field(description="Spoofed sender name and email address")
     subject: str = Field(description="Email subject line")
     body: str = Field(description="Body of the synthetic phishing email")
-    maliciousElements: list[MaliciousElement] = Field(description="List of malicious elements to identify")
-
+    maliciousElements: List[MaliciousElement] = Field(description="List of malicious elements to identify") # FIXED: Capital 'List'
 # 4. Security & Sanitization
 def redact_pii(text: str) -> str:
     text = re.sub(r'\b\d{3}[-\s]\d{2}[-\s]\d{4}\b', '[REDACTED_SSN]', text)
