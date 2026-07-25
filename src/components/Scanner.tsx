@@ -60,10 +60,18 @@ export default function Scanner() {
     try {
       const saved = localStorage.getItem('phishguard_history');
       if (saved) {
-        setHistory(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setHistory(parsed);
+        } else {
+          localStorage.setItem('phishguard_history', '[]');
+          setHistory([]);
+        }
       }
     } catch (e) {
       console.error('Failed to load history', e);
+      localStorage.setItem('phishguard_history', '[]');
+      setHistory([]);
     }
   }, []);
 

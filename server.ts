@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type, Schema } from "@google/genai";
+import rateLimit from "express-rate-limit";
 import 'dotenv/config';
 
 const PORT = 3000;
@@ -21,35 +22,15 @@ function getAI(): GoogleGenAI {
 async function startServer() {
   const app = express();
   app.set("trust proxy", 1);
-  app.use(express.json());
+  app.use(express.json({ limit: '100kb' }));
 
-  const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-  function rateLimiter(req: express.Request, res: express.Response, next: express.NextFunction) {
-    const ip = req.ip || req.socket.remoteAddress || 'unknown';
-    const now = Date.now();
-    const windowMs = 60 * 1000; // 1 minute
-    const limit = 10;
+  const apiLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    message: { error: "Rate limit reached to protect server resources. Please try again in a minute." }
+  });
 
-    let record = rateLimitMap.get(ip);
-    if (!record) {
-      record = { count: 0, resetTime: now + windowMs };
-      rateLimitMap.set(ip, record);
-    }
-
-    if (now > record.resetTime) {
-      record.count = 0;
-      record.resetTime = now + windowMs;
-    }
-
-    record.count++;
-
-    if (record.count > limit) {
-      res.status(429).json({ error: "Rate limit reached to protect server resources. Please try again in a minute." });
-      return;
-    }
-
-    next();
-  }
+  app.use('/api/', apiLimiter);
 
   function redactPII(text: string): string {
     let sanitized = text;
@@ -60,8 +41,12 @@ async function startServer() {
     return sanitized;
   }
 
+  function sanitizePromptInput(text: string): string {
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
   // API Routes
-  app.post("/api/analyze", rateLimiter, async (req, res) => {
+  app.post("/api/analyze", async (req, res) => {
     try {
       if (req.body && typeof req.body.text === "string") {
         req.body.text = redactPII(req.body.text);
@@ -72,6 +57,8 @@ async function startServer() {
         return res.status(400).json({ error: "Email text is required" });
       }
 
+      const escapedText = sanitizePromptInput(sanitizedText);
+
       const aiClient = getAI();
       const response = await aiClient.models.generateContent({
         model: process.env.GEMINI_MODEL_VERSION || "gemini-3.1-flash-lite",
@@ -81,7 +68,7 @@ async function startServer() {
             parts: [{ text: `Analyze the following email for phishing indicators (urgency, typosquatting, suspicious links, social engineering).
 
 <email_content>
-${sanitizedText}
+${escapedText}
 </email_content>
 
 Provide a detailed explanation and a risk score from 0 to 100.` }],
@@ -119,7 +106,7 @@ Provide a detailed explanation and a risk score from 0 to 100.` }],
       res.json(result);
     } catch (error: any) {
       console.error("Error analyzing email:", error);
-      res.status(500).json({ error: error.message || "Failed to analyze email" });
+      res.status(500).json({ error: "Internal Server Error" });
     }
   });
 
@@ -180,7 +167,7 @@ Provide a detailed explanation and a risk score from 0 to 100.` }],
       res.json(result);
     } catch (error: any) {
       console.error("Error generating training scenario:", error);
-      res.status(500).json({ error: error.message || "Failed to generate training scenario" });
+      res.status(500).json({ error: "Internal Server Error" });
     }
   });
 

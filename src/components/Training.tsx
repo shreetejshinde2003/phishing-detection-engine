@@ -87,15 +87,43 @@ export default function Training() {
     if (!scenario) return;
     
     const selectedWords = Array.from(selectedTokens.values()).map(w => w.toLowerCase());
+    const joinedSelected = selectedWords.join('');
+
     const caught: MaliciousElement[] = [];
     const missed: MaliciousElement[] = [];
 
     scenario.maliciousElements.forEach(el => {
       const elLower = el.element.toLowerCase();
-      // Considered caught if a selected word of length > 2 matches a substring of the malicious element, or vice versa
-      const isCaught = selectedWords.some(word => 
-        word.length > 2 && (elLower.includes(word) || word.includes(elLower))
-      );
+      const elStripped = elLower.replace(/\s+/g, '');
+      
+      let isCaught = false;
+
+      // 1. Exact or near-exact containment of the stripped element in the joined selected text
+      if (joinedSelected.includes(elStripped)) {
+        isCaught = true;
+      }
+      
+      // 2. If the element is long enough, check if any single selected word is a significant substring (e.g. > 50% match)
+      if (!isCaught) {
+        isCaught = selectedWords.some(word => {
+          if (word.length < 4) return false;
+          if (elStripped.includes(word) && word.length >= elStripped.length * 0.5) return true;
+          if (word.includes(elStripped) && elStripped.length >= word.length * 0.5) return true;
+          return false;
+        });
+      }
+
+      // 3. Fallback for multi-word elements: check if > 50% of significant words (length >= 3) are selected, OR if ANY highly significant word (> 5 chars) is selected
+      if (!isCaught) {
+        const words = elLower.split(/\s+/).filter(w => w.length >= 3);
+        if (words.length > 0) {
+          const matchedWords = words.filter(w => joinedSelected.includes(w));
+          if (matchedWords.length / words.length >= 0.5 || matchedWords.some(w => w.length >= 5)) {
+            isCaught = true;
+          }
+        }
+      }
+
       if (isCaught) {
         caught.push(el);
       } else {
@@ -119,7 +147,15 @@ export default function Training() {
           return (
             <span 
               key={id} 
+              role="button"
+              tabIndex={0}
               onClick={() => toggleSelection(id, token)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleSelection(id, token);
+                }
+              }}
               className={`cursor-pointer px-0.5 transition-all ${isSelected ? 'bg-cyan-400 text-black font-bold shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'hover:bg-cyan-500/30 hover:text-cyan-200'}`}
             >
               {token}
