@@ -1,37 +1,84 @@
-# PhishGuard: AI Threat Detection Engine
+# 🛡️ PhishGuard: AI Threat Detection Engine
 
-An enterprise-grade, AI-powered phishing detection and forensic analysis tool built with **React**, **Python (FastAPI)**, and the **Gemini 3.1-Flash-Lite** model.
+An AI-powered phishing detection and forensic analysis web application built with **React**, **TypeScript**, **FastAPI**, and **Google Gemini 3.1 Flash Lite**.
 
----
-
-## 🛡️ Core Features
-
-- **Deep Forensic Analysis:** Evaluates email payloads for typosquatting, urgency markers, and financial pretexting.
-- **MITRE ATT&CK Mapping:** Automatically maps identified threats to standard MITRE ATT&CK techniques (e.g., **T1566.002 – Spearphishing Link**).
-- **Data Security:** Implements strict pre-processing regex pipelines to redact Personally Identifiable Information (PII), including phone numbers and identification numbers, before data reaches external LLMs.
-- **Adversarial Defense:** Protects against prompt injection attacks using XML boundary isolation.
-- **Interactive SOC Training:** Generates synthetic spear-phishing scenarios for security analyst training.
+This project demonstrates the customization, debugging, deployment, and enhancement of an AI-assisted phishing detection application, including backend integration, security improvements, and public deployment on Vercel.
 
 ---
 
-## 🛠️ Tech Stack
+# 📌 Project Background
 
-### Frontend
+This project originated from a prototype generated using **Google AI Studio's Text-to-App** capability.
+
+Rather than treating the generated application as complete, the focus of this repository was to improve and refine it by resolving runtime issues, integrating a FastAPI backend, updating deprecated dependencies, improving documentation, and deploying it as a publicly accessible web application.
+
+The project also served as a practical learning experience in working with AI-assisted software development workflows.
+
+---
+
+# 👨‍💻 My Contributions
+
+My work on this project included:
+
+- Debugging and resolving runtime issues
+- Updating deprecated Google Gemini model versions
+- Integrating and configuring the FastAPI backend
+- Configuring deployment using Vercel Serverless Functions
+- Improving project documentation
+- Managing environment variables
+- Publishing and maintaining the GitHub repository
+
+---
+
+# 🛡️ Application Features
+
+- **Deep Forensic Analysis**
+  - Evaluates email payloads for typosquatting, urgency markers, and financial pretexting.
+
+- **MITRE ATT&CK Mapping**
+  - Maps detected phishing techniques to MITRE ATT&CK techniques (for example, **T1566.002 – Spearphishing Link**).
+
+- **PII Redaction**
+  - Redacts sensitive information before data is sent to external language models.
+
+- **Prompt Injection Protection**
+  - Uses XML boundary isolation techniques to reduce prompt injection risks.
+
+- **SOC Training**
+  - Generates synthetic phishing scenarios for cybersecurity awareness and analyst training.
+
+---
+
+# 🛠️ Tech Stack
+
+## Frontend
+
 - React
+- TypeScript
 - Vite
-- Tailwind CSS (Dark / Glassmorphism UI)
+- Tailwind CSS
 
-### Backend
+## Backend
+
 - Python 3.9+
 - FastAPI
 - Pydantic
 
-### AI / LLM
-- Google Gemini API (`gemini-3.1-flash-lite`)
+## AI / LLM
 
-### Security & Infrastructure
+- Google Gemini API
+- Gemini 3.1 Flash Lite
+
+## Infrastructure
+
+- Vercel
+- Serverless Functions
+
+## Security
+
 - Regex-based PII Sanitization
-- Vercel Serverless Functions
+- Prompt Injection Protection
+- Rate Limiting
 
 ---
 
@@ -46,7 +93,7 @@ cd phishing-detection-engine
 
 ---
 
-## 2. Install Python Dependencies
+## 2. Install Backend Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -75,13 +122,13 @@ GEMINI_MODEL_VERSION=gemini-3.1-flash-lite
 
 ## 5. Run the Application
 
-Start the Vite frontend:
+Start the frontend:
 
 ```bash
 npm run dev
 ```
 
-To run the FastAPI backend locally in another terminal:
+Run the FastAPI backend in another terminal:
 
 ```bash
 uvicorn api.index:app --reload
@@ -91,31 +138,61 @@ uvicorn api.index:app --reload
 
 # 🚀 Deployment
 
-This project is optimized for **Vercel** deployment.
+This project is optimized for deployment on **Vercel**.
 
 - React frontend is built using **Vite**.
-- FastAPI backend inside the `/api` directory is deployed automatically as **Vercel Serverless Functions**.
+- FastAPI backend inside the `/api` directory is deployed as **Vercel Serverless Functions**.
 - Routing is configured through `vercel.json`.
 
 ---
 
-## 📂 Project Structure
+# 📂 Project Structure
 
 ```text
 phishing-detection-engine/
 │
-├── api/                 # FastAPI backend
-├── src/                 # React frontend source
-├── public/              # Static assets
+├── api/                     # FastAPI backend
+├── src/                     # React + TypeScript frontend
+├── public/                  # Static assets
 ├── package.json
+├── package-lock.json
 ├── requirements.txt
 ├── vercel.json
-├── vite.config.js
+├── vite.config.ts
+├── .env.example
 └── README.md
 ```
 
 ---
 
-## 📄 License
+# 📚 What I Learned
+
+Working on this project helped me gain practical experience with:
+
+- Working with AI-generated applications
+- Debugging React and TypeScript code
+- FastAPI backend integration
+- Google Gemini API integration
+- Environment variable management
+- Deploying applications using Vercel
+- Version control using Git and GitHub
+- Maintaining and documenting production-ready repositories
+
+---
+
+# 📄 License
 
 This project is intended for educational, research, and cybersecurity demonstration purposes.
+
+---
+
+## 👨‍💻 Author
+
+**Shreetej Shinde**
+
+- GitHub: https://github.com/shreetejshinde2003
+- Live Demo: https://phishing-detection-engine.vercel.app
+
+---
+
+⭐ If you found this project interesting, consider giving it a star on GitHub.
