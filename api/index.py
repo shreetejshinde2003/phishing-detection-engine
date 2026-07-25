@@ -2,13 +2,15 @@ import os
 import re
 import json
 from typing import Optional, List
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
 from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
 
-app = FastAPI()
+load_dotenv()
 
+app = FastAPI()
 # 1. Initialize Client
 api_key = os.environ.get("GEMINI_API_KEY")
 if not api_key:
