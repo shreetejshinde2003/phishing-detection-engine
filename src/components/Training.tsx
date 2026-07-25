@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { TrainingScenario, MaliciousElement } from '../types';
-import { Target, Loader2, AlertCircle, CheckCircle2, XCircle, ChevronDown, Terminal } from 'lucide-react';
+import { Target, Loader2, AlertCircle, CheckCircle2, XCircle, ChevronDown, Terminal, RotateCcw } from 'lucide-react';
 
 const Typewriter = ({ text }: { text: string }) => {
   const [displayed, setDisplayed] = useState('');
@@ -48,18 +48,14 @@ export default function Training() {
     try {
       const response = await fetch('/api/generate-training', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           seed: Math.random().toString(36).substring(7),
           difficulty 
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate scenario');
-      }
+      if (!response.ok) throw new Error('Failed to generate scenario');
 
       const data = await response.json();
       setScenario(data);
@@ -71,7 +67,7 @@ export default function Training() {
   };
 
   const toggleSelection = (id: string, token: string) => {
-    if (isGraded) return;
+    if (isGraded) return; // Only lock when graded, allow resets
     setSelectedTokens(prev => {
       const next = new Map(prev);
       if (next.has(id)) {
@@ -87,7 +83,7 @@ export default function Training() {
     if (!scenario) return;
     
     const selectedWords = Array.from(selectedTokens.values()).map(w => w.toLowerCase());
-    const joinedSelected = selectedWords.join('');
+    const joinedSelected = selectedWords.join(' ');
 
     const caught: MaliciousElement[] = [];
     const missed: MaliciousElement[] = [];
@@ -95,32 +91,19 @@ export default function Training() {
     scenario.maliciousElements.forEach(el => {
       const elLower = el.element.toLowerCase();
       const elStripped = elLower.replace(/\s+/g, '');
+      const joinedStripped = joinedSelected.replace(/\s+/g, '');
       
       let isCaught = false;
 
-      // 1. Exact or near-exact containment of the stripped element in the joined selected text
-      if (joinedSelected.includes(elStripped)) {
+      if (joinedStripped.includes(elStripped) || elStripped.includes(joinedStripped)) {
         isCaught = true;
       }
       
-      // 2. If the element is long enough, check if any single selected word is a significant substring (e.g. > 50% match)
       if (!isCaught) {
-        isCaught = selectedWords.some(word => {
-          if (word.length < 4) return false;
-          if (elStripped.includes(word) && word.length >= elStripped.length * 0.5) return true;
-          if (word.includes(elStripped) && elStripped.length >= word.length * 0.5) return true;
-          return false;
-        });
-      }
-
-      // 3. Fallback for multi-word elements: check if > 50% of significant words (length >= 3) are selected, OR if ANY highly significant word (> 5 chars) is selected
-      if (!isCaught) {
-        const words = elLower.split(/\s+/).filter(w => w.length >= 3);
-        if (words.length > 0) {
-          const matchedWords = words.filter(w => joinedSelected.includes(w));
-          if (matchedWords.length / words.length >= 0.5 || matchedWords.some(w => w.length >= 5)) {
-            isCaught = true;
-          }
+        const words = elLower.split(/\s+/).filter(w => w.length >= 2);
+        const matchedCount = words.filter(w => joinedSelected.includes(w)).length;
+        if (words.length > 0 && (matchedCount / words.length >= 0.4 || matchedCount > 0)) {
+          isCaught = true;
         }
       }
 
@@ -134,6 +117,13 @@ export default function Training() {
     setCaughtElements(caught);
     setMissedElements(missed);
     setIsGraded(true);
+  };
+
+  const resetGrading = () => {
+    setIsGraded(false);
+    setSelectedTokens(new Map());
+    setCaughtElements([]);
+    setMissedElements([]);
   };
 
   const TokenizedText = ({ text, type }: { text: string, type: string }) => {
@@ -156,7 +146,11 @@ export default function Training() {
                   toggleSelection(id, token);
                 }
               }}
-              className={`cursor-pointer px-0.5 transition-all ${isSelected ? 'bg-cyan-400 text-black font-bold shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'hover:bg-cyan-500/30 hover:text-cyan-200'}`}
+              className={`cursor-pointer px-1 rounded-sm transition-all inline-block my-0.5 ${
+                isSelected 
+                  ? 'bg-cyan-400 text-black font-bold shadow-[0_0_8px_rgba(34,211,238,0.8)]' 
+                  : 'hover:bg-cyan-500/30 hover:text-cyan-200'
+              }`}
             >
               {token}
             </span>
@@ -194,16 +188,9 @@ export default function Training() {
           <button
             onClick={generateScenario}
             disabled={loading}
-            className="flex items-center justify-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 disabled:border-zinc-800 disabled:bg-zinc-800/50 disabled:text-zinc-500 px-5 py-2 rounded-sm font-medium font-mono transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(6,182,212,0.3)] disabled:hover:scale-100 disabled:hover:shadow-none shrink-0 w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/50 disabled:border-zinc-800 disabled:bg-zinc-800/50 disabled:text-zinc-500 px-5 py-2 rounded-sm font-medium font-mono transition-all duration-200 hover:shadow-[0_0_15px_rgba(6,182,212,0.3)] shrink-0 w-full sm:w-auto"
           >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              'Generate Scenario'
-            )}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Generate New Scenario'}
           </button>
         </div>
       </div>
@@ -251,68 +238,82 @@ export default function Training() {
             </div>
           </div>
 
-          <div className="col-span-1 bg-black border border-zinc-800 rounded-sm p-6 flex flex-col shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-mono font-semibold text-cyan-400 flex items-center gap-2">
-                <Terminal className="w-4 h-4" />
-                ANALYSIS_MODULE
-              </h3>
+          <div className="col-span-1 bg-black border border-zinc-800 rounded-sm p-6 flex flex-col shadow-2xl justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-mono font-semibold text-cyan-400 flex items-center gap-2">
+                  <Terminal className="w-4 h-4" />
+                  ANALYSIS_MODULE
+                </h3>
+              </div>
+
+              {isGraded ? (
+                <div className="space-y-6">
+                  <div className="bg-black border border-zinc-800 p-4 rounded-sm text-center shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
+                    <div className="text-2xl font-bold font-mono text-cyan-400 mb-1 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
+                      {caughtElements.length}/{scenario.maliciousElements.length}
+                    </div>
+                    <div className="text-xs font-bold font-mono text-zinc-500 uppercase tracking-widest">
+                      Threat Vectors Caught
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                    {caughtElements.map((item, idx) => (
+                      <div key={'caught-'+idx} className="bg-emerald-500/5 border border-emerald-500/30 p-4 rounded-sm">
+                        <div className="text-emerald-400 font-mono text-sm mb-2 break-all font-bold">
+                          &gt; {item.element}
+                        </div>
+                        <div className="text-zinc-400 font-mono text-xs flex items-start gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                          <Typewriter text={item.reason} />
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {missedElements.map((item, idx) => (
+                      <div key={'missed-'+idx} className="bg-rose-500/5 border border-rose-500/40 p-4 rounded-sm">
+                        <div className="text-rose-400 font-mono text-sm mb-2 break-all font-bold flex items-center justify-between">
+                           <span>&gt; {item.element}</span>
+                           <span className="text-[10px] uppercase font-bold font-mono bg-rose-500/20 px-2 py-0.5 rounded-sm border border-rose-500/50 text-rose-300">MISSED</span>
+                        </div>
+                        <div className="text-zinc-400 font-mono text-xs flex items-start gap-2">
+                          <XCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                          <Typewriter text={item.reason} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center p-6 border border-zinc-800 bg-zinc-900/30 rounded-sm">
+                  <AlertCircle className="w-8 h-8 text-cyan-400 mb-3 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+                  <h4 className="text-cyan-400 font-mono font-bold mb-2 uppercase tracking-widest">Identify IOCs</h4>
+                  <p className="text-xs text-zinc-500 mb-6 font-mono leading-relaxed">
+                    Select suspicious tokens in the forensic view. Grade when complete.
+                  </p>
+                </div>
+              )}
             </div>
 
-            {isGraded ? (
-              <div className="space-y-6">
-                <div className="bg-black border border-zinc-800 p-4 rounded-sm text-center shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-                  <div className="text-2xl font-bold font-mono text-cyan-400 mb-1 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
-                    {caughtElements.length}/{scenario.maliciousElements.length}
-                  </div>
-                  <div className="text-xs font-bold font-mono text-zinc-500 uppercase tracking-widest">
-                    Threat Vectors Caught
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  {caughtElements.map((item, idx) => (
-                    <div key={'caught-'+idx} className="bg-emerald-500/5 border border-emerald-500/30 p-4 rounded-sm shadow-[0_0_15px_rgba(52,211,153,0.15)] animate-pulse-slow">
-                      <div className="text-emerald-400 font-mono text-sm mb-2 break-all font-bold drop-shadow-[0_0_5px_rgba(52,211,153,0.5)]">
-                        &gt; {item.element}
-                      </div>
-                      <div className="text-zinc-400 font-mono text-xs flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                        <Typewriter text={item.reason} />
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {missedElements.map((item, idx) => (
-                    <div key={'missed-'+idx} className="bg-rose-500/5 border border-rose-500/40 p-4 rounded-sm shadow-[0_0_15px_rgba(244,63,94,0.15)]">
-                      <div className="text-rose-400 font-mono text-sm mb-2 break-all font-bold drop-shadow-[0_0_5px_rgba(244,63,94,0.5)] flex items-center justify-between animate-pulse-fast">
-                         <span>&gt; {item.element}</span>
-                         <span className="text-[10px] uppercase font-bold font-mono bg-rose-500/20 px-2 py-0.5 rounded-sm border border-rose-500/50 text-rose-300">MISSED</span>
-                      </div>
-                      <div className="text-zinc-400 font-mono text-xs flex items-start gap-2">
-                        <XCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                        <Typewriter text={item.reason} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="flex-grow flex flex-col items-center justify-center text-center p-6 border border-zinc-800 bg-zinc-900/30 rounded-sm">
-                <AlertCircle className="w-8 h-8 text-cyan-400 mb-3 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
-                <h4 className="text-cyan-400 font-mono font-bold mb-2 uppercase tracking-widest">Identify IOCs</h4>
-                <p className="text-xs text-zinc-500 mb-6 font-mono leading-relaxed">
-                  Select suspicious tokens in the forensic view. Grade when complete.
-                </p>
+            <div className="mt-6 pt-4 border-t border-zinc-800">
+              {isGraded ? (
+                <button
+                  onClick={resetGrading}
+                  className="w-full flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-4 py-2.5 rounded-sm font-bold font-mono transition-all uppercase tracking-widest text-xs"
+                >
+                  <RotateCcw className="w-4 h-4" /> Try Again / Reset Selection
+                </button>
+              ) : (
                 <button
                   onClick={handleGrade}
                   disabled={selectedTokens.size === 0}
-                  className="w-full flex items-center justify-center bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 disabled:border-zinc-800 disabled:bg-zinc-800/50 disabled:text-zinc-500 px-4 py-2.5 rounded-sm font-bold font-mono transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(6,182,212,0.3)] disabled:hover:scale-100 disabled:hover:shadow-none uppercase tracking-widest"
+                  className="w-full flex items-center justify-center bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/50 disabled:border-zinc-800 disabled:bg-zinc-800/50 disabled:text-zinc-500 px-4 py-2.5 rounded-sm font-bold font-mono transition-all uppercase tracking-widest text-xs"
                 >
                   [ Grade Analysis ]
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
