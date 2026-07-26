@@ -11,7 +11,7 @@ export default function App() {
       <header className="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-md sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
+            <div onClick={() => setActiveTab('scanner')} className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="bg-cyan-500/10 p-2 rounded-sm border border-cyan-500/20">
                 <Activity className="w-5 h-5 text-cyan-400" />
               </div>
