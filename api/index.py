@@ -24,7 +24,7 @@ class AnalyzeRequest(BaseModel):
     text: str
 
 class TrainingRequest(BaseModel):
-    seed: Optional[str] = None  # FIXED: using Optional instead of |
+    seed: Optional[str] = None  # Optional seed for generating training scenarios.
     difficulty: str = "Level 1: Mass Phishing"
 
 # 3. Define Gemini Structured Output Models (Pydantic)
