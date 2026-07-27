@@ -108,7 +108,7 @@ Each analysis includes:
 ## 🎯 SOC Analyst Training
 
 <p align="center">
-  <img src="screenshots/07-soc-training.png" width="95%">
+  <img src="screenshots/04-soc-level1-result.png" width="95%">
 </p>
 
 The built-in SOC Training module generates realistic AI-powered phishing scenarios that allow analysts and students to practice identifying Indicators of Compromise (IOCs) and common social engineering techniques.
